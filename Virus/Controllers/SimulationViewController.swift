@@ -14,7 +14,8 @@ class SimulationViewController: UIViewController {
     var groupSize: Int?
     var infectionFactor: Int?
     var infectionPeriod: Int = 0
-    
+    private var selectedIndexPaths: Set<IndexPath> = []
+
 
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
     
@@ -46,6 +47,10 @@ class SimulationViewController: UIViewController {
         
         setupCollectionView()
         setupConstraints()
+        
+        let swipeGesture = UIPanGestureRecognizer(target: self, action: #selector(handleSwipeGesture(_:)))
+        collectionView.addGestureRecognizer(swipeGesture)
+
     }
     
 
@@ -63,7 +68,6 @@ class SimulationViewController: UIViewController {
         layout.itemSize = CGSize(width: width, height: width * 1.5)
         
         collectionView.collectionViewLayout = layout
-        
     }
     
     func setupConstraints() {
@@ -99,12 +103,12 @@ class SimulationViewController: UIViewController {
     }
 
     func startTimer() {
+        personLabel.textColor = .systemRed
         if !isTimerRunning {
             isTimerRunning = true
             timer = Timer.scheduledTimer(timeInterval: TimeInterval(infectionPeriod), target: self, selector: #selector(updateCollectionView), userInfo: nil, repeats: true)
         }
     }
-    
     
     func finishSimulation() {
         stopTimer()
@@ -116,6 +120,27 @@ class SimulationViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    private func startSelection(at indexPath: IndexPath) {
+        
+        selectedIndexPaths.insert(indexPath)
+        cellsModel.cells[indexPath.item].isInfected = true
+        collectionView.reloadItems(at: [indexPath])
+        cellsModel.updateCellsModel(cellsModel)
+        personLabel.textColor = .systemRed
+        personLabel.text = "Заражено \(cellsModel.numberOfInfected) из \(cellsModel.groupSize)"
+        
+    }
+    private func endSelection(at indexPath: IndexPath) {
+        
+        selectedIndexPaths.insert(indexPath)
+        cellsModel.cells[indexPath.item].isInfected = true
+        collectionView.reloadItems(at: [indexPath])
+        cellsModel.updateCellsModel(cellsModel)
+        personLabel.text = "Заражено \(cellsModel.numberOfInfected) из \(cellsModel.groupSize)"
+        startTimer()
+        
+    }
+    
     @objc private func goBack() {
         stopTimer()
         navigationController?.popViewController(animated: true)
@@ -125,6 +150,28 @@ class SimulationViewController: UIViewController {
         cellsModel.infectTheNeighbors()
         collectionView.reloadData()
         personLabel.text = "Заражено \(cellsModel.numberOfInfected) из \(cellsModel.groupSize)"
+    }
+    
+    @objc func handleSwipeGesture(_ gestureRecognizer: UIPanGestureRecognizer) {
+        let location = gestureRecognizer.location(in: collectionView)
+        
+        switch gestureRecognizer.state {
+        case .began:
+            if let indexPath = collectionView.indexPathForItem(at: location) {
+                startSelection(at: indexPath)
+            }
+            
+        case .changed:
+            if let indexPath = collectionView.indexPathForItem(at: location) {
+                startSelection(at: indexPath)
+            }
+        case .ended:
+            if let indexPath = collectionView.indexPathForItem(at: location) {
+                endSelection(at: indexPath)
+            }
+        default:
+            break
+        }
     }
 }
 
@@ -145,7 +192,7 @@ extension SimulationViewController: UICollectionViewDelegate {
         cellsModel.cells[indexPath.item].isInfected = true
         collectionView.reloadData()
         cellsModel.updateCellsModel(cellsModel)
-        personLabel.textColor = .systemRed
+        
         personLabel.text = "Заражено \(cellsModel.numberOfInfected) из \(cellsModel.groupSize)"
         startTimer()
     }
