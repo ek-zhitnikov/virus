@@ -96,26 +96,29 @@ class SimulationViewController: UIViewController {
     
     func stopTimer() {
         timer?.invalidate()
-        let alert = UIAlertController(title: "Внимание!", message: "В популяции не осталось здоровых людей", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Начать заново", style: .default, handler: { [weak self] _ in
-            self?.timer?.invalidate()
-            self?.navigationController?.popViewController(animated: true)
-        }))
-        present(alert, animated: true, completion: nil)
+    }
+
+    func startTimer() {
+        if !isTimerRunning {
+            isTimerRunning = true
+            timer = Timer.scheduledTimer(timeInterval: TimeInterval(infectionPeriod), target: self, selector: #selector(updateCollectionView), userInfo: nil, repeats: true)
+        }
     }
     
-    func showAlert() {
-        let alert = UIAlertController(title: "Вы действительно хотите закончить симуляцию?", message: nil, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Да", style: .default, handler: { [weak self] _ in
-            self?.timer?.invalidate()
+    
+    func finishSimulation() {
+        stopTimer()
+        let alert = UIAlertController(title: "Внимание!", message: "В популяции не осталось здоровых людей", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Начать заново", style: .default, handler: { [weak self] _ in
+            self?.stopTimer()
             self?.navigationController?.popViewController(animated: true)
         }))
-        alert.addAction(UIAlertAction(title: "Нет", style: .cancel, handler: nil))
         present(alert, animated: true, completion: nil)
     }
     
     @objc private func goBack() {
-        showAlert()
+        stopTimer()
+        navigationController?.popViewController(animated: true)
     }
     
     @objc func updateCollectionView() {
@@ -144,14 +147,10 @@ extension SimulationViewController: UICollectionViewDelegate {
         cellsModel.updateCellsModel(cellsModel)
         personLabel.textColor = .systemRed
         personLabel.text = "Заражено \(cellsModel.numberOfInfected) из \(cellsModel.groupSize)"
-        
-        if !isTimerRunning {
-            isTimerRunning = true
-            timer = Timer.scheduledTimer(timeInterval: TimeInterval(infectionPeriod), target: self, selector: #selector(updateCollectionView), userInfo: nil, repeats: true)
-        }
-
+        startTimer()
     }
 }
+
 
 
 

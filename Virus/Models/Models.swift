@@ -92,7 +92,7 @@ class CellsModel {
             }
             updateCellsModel(self)
         } else {
-            simulationViewController?.stopTimer()
+            simulationViewController?.finishSimulation()
         }
     }
 }
