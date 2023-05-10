@@ -7,7 +7,7 @@
 
 import UIKit
 
-class SimulationViewController: UIViewController {
+class SimulationViewController: UIViewController, UIGestureRecognizerDelegate {
     var cellsModel: CellsModel!
     var timer: Timer?
     var isTimerRunning = false
@@ -15,8 +15,8 @@ class SimulationViewController: UIViewController {
     var infectionFactor: Int?
     var infectionPeriod: Int = 0
     private var selectedIndexPaths: Set<IndexPath> = []
-
-
+    
+    
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
     
     private lazy var bottomView: UIView = {
@@ -40,7 +40,7 @@ class SimulationViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .black
         cellsModel = CellsModel(simulationViewController: self)
-
+        
         let backButton = UIBarButtonItem(title: "Назад", style: .done, target: self, action: #selector(goBack))
         backButton.tintColor = .white
         navigationItem.leftBarButtonItem = backButton
@@ -49,11 +49,11 @@ class SimulationViewController: UIViewController {
         setupConstraints()
         
         let swipeGesture = UIPanGestureRecognizer(target: self, action: #selector(handleSwipeGesture(_:)))
+        swipeGesture.delegate = self
         collectionView.addGestureRecognizer(swipeGesture)
-
+        
     }
     
-
     
     func setupCollectionView() {
         collectionView.backgroundColor = .clear
@@ -68,6 +68,7 @@ class SimulationViewController: UIViewController {
         layout.itemSize = CGSize(width: width, height: width * 1.5)
         
         collectionView.collectionViewLayout = layout
+        
     }
     
     func setupConstraints() {
@@ -94,20 +95,28 @@ class SimulationViewController: UIViewController {
             personLabel.centerYAnchor.constraint(equalTo: bottomView.centerYAnchor),
             personLabel.leadingAnchor.constraint(equalTo: bottomView.leadingAnchor, constant: 16),
             personLabel.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -16)
-
+            
         ])
     }
     
     func stopTimer() {
         timer?.invalidate()
     }
-
+    
     func startTimer() {
         personLabel.textColor = .systemRed
         if !isTimerRunning {
             isTimerRunning = true
             timer = Timer.scheduledTimer(timeInterval: TimeInterval(infectionPeriod), target: self, selector: #selector(updateCollectionView), userInfo: nil, repeats: true)
         }
+    }
+    
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer is UIPanGestureRecognizer {
+            let translation = (gestureRecognizer as! UIPanGestureRecognizer).translation(in: collectionView)
+            return abs(translation.x) > abs(translation.y)
+        }
+        return true
     }
     
     func finishSimulation() {
@@ -120,7 +129,7 @@ class SimulationViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    private func startSelection(at indexPath: IndexPath) {
+    func startSelection(at indexPath: IndexPath) {
         
         selectedIndexPaths.insert(indexPath)
         cellsModel.cells[indexPath.item].isInfected = true
@@ -130,7 +139,7 @@ class SimulationViewController: UIViewController {
         personLabel.text = "Заражено \(cellsModel.numberOfInfected) из \(cellsModel.groupSize)"
         
     }
-    private func endSelection(at indexPath: IndexPath) {
+    func endSelection(at indexPath: IndexPath) {
         
         selectedIndexPaths.insert(indexPath)
         cellsModel.cells[indexPath.item].isInfected = true
