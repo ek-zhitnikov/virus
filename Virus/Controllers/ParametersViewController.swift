@@ -22,7 +22,7 @@ class ParametersViewController: UIViewController, UITextFieldDelegate {
     
     private lazy var groupSizeTextField: UITextField = {
         let view = UITextField()
-        view.placeholder = "Больше 0"
+        view.placeholder = "От 1 до 1000 человек"
         view.keyboardType = .default
         view.borderStyle = .roundedRect
         view.delegate = self
@@ -45,7 +45,7 @@ class ParametersViewController: UIViewController, UITextFieldDelegate {
     
     private lazy var infectionFactorTextField: UITextField = {
         let view = UITextField()
-        view.placeholder = "От 1 до 8"
+        view.placeholder = "От 1 до 8 человек"
         view.keyboardType = .default
         view.borderStyle = .roundedRect
         view.delegate = self
@@ -68,7 +68,7 @@ class ParametersViewController: UIViewController, UITextFieldDelegate {
     
     private lazy var infectionPeriodTextField: UITextField = {
         let view = UITextField()
-        view.placeholder = "Больше 0"
+        view.placeholder = "От 1 до 5 секунд"
         view.keyboardType = .default
         view.borderStyle = .roundedRect
         view.delegate = self
@@ -129,7 +129,7 @@ class ParametersViewController: UIViewController, UITextFieldDelegate {
             
             groupSizeTextField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             groupSizeTextField.topAnchor.constraint(equalTo: groupSizeLabel.bottomAnchor, constant: 10),
-            groupSizeTextField.widthAnchor.constraint(equalToConstant: 150),
+            groupSizeTextField.widthAnchor.constraint(equalToConstant: 200),
             groupSizeTextField.heightAnchor.constraint(equalToConstant: 44),
             
             infectionFactorLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -139,7 +139,7 @@ class ParametersViewController: UIViewController, UITextFieldDelegate {
             
             infectionFactorTextField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             infectionFactorTextField.topAnchor.constraint(equalTo: infectionFactorLabel.bottomAnchor, constant: 10),
-            infectionFactorTextField.widthAnchor.constraint(equalToConstant: 150),
+            infectionFactorTextField.widthAnchor.constraint(equalToConstant: 200),
             infectionFactorTextField.heightAnchor.constraint(equalToConstant: 44),
 
             infectionPeriodLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -149,7 +149,7 @@ class ParametersViewController: UIViewController, UITextFieldDelegate {
             
             infectionPeriodTextField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             infectionPeriodTextField.topAnchor.constraint(equalTo: infectionPeriodLabel.bottomAnchor, constant: 10),
-            infectionPeriodTextField.widthAnchor.constraint(equalToConstant: 150),
+            infectionPeriodTextField.widthAnchor.constraint(equalToConstant: 200),
             infectionPeriodTextField.heightAnchor.constraint(equalToConstant: 44),
 
             
@@ -169,7 +169,7 @@ class ParametersViewController: UIViewController, UITextFieldDelegate {
               let groupSize = Int(groupSizeText),
               groupSize > 0, groupSize <= 1000
         else {
-            let alertController = UIAlertController(title: "Ошибка", message: "Количество людей в моделируемой группе должно быть от 1 до 1000", preferredStyle: .alert)
+            let alertController = UIAlertController(title: "Ошибка", message: "Количество людей в моделируемой группе должно быть от 1 до 1000 человек", preferredStyle: .alert)
             alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
             present(alertController, animated: true, completion: nil)
             return
@@ -178,7 +178,7 @@ class ParametersViewController: UIViewController, UITextFieldDelegate {
               let infectionFactor = Int(infectionFactorText),
               infectionFactor > 0, infectionFactor <= 8
         else {
-            let alertController = UIAlertController(title: "Ошибка", message: "Количество людей, которых может заразить одни человек, должно быть от 1 до 8", preferredStyle: .alert)
+            let alertController = UIAlertController(title: "Ошибка", message: "Количество людей, которых может заразить одни человек, должно быть от 1 до 8 человек", preferredStyle: .alert)
             alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
             present(alertController, animated: true, completion: nil)
             return
@@ -186,9 +186,9 @@ class ParametersViewController: UIViewController, UITextFieldDelegate {
         
         guard let infectionPeriodText = infectionPeriodTextField.text,
               let infectionPeriod = Int(infectionPeriodText),
-              infectionPeriod > 0
+              infectionPeriod > 0, infectionPeriod < 5
         else {
-            let alertController = UIAlertController(title: "Ошибка", message: "Период заражения должен быть больше 0", preferredStyle: .alert)
+            let alertController = UIAlertController(title: "Ошибка", message: "Период заражения должен быть от 1 до 5 секунд", preferredStyle: .alert)
             alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
             present(alertController, animated: true, completion: nil)
             return
