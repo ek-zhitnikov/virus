@@ -15,17 +15,30 @@ class SimulationViewController: UIViewController, UIGestureRecognizerDelegate {
     var infectionFactor: Int?
     var infectionPeriod: Int = 0
     private var selectedIndexPaths: Set<IndexPath> = []
+    private let cellWidth = UIScreen.main.bounds.width / 20
+
     
+    lazy var collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
+        layout.itemSize = CGSize(width: cellWidth, height: cellWidth * 1.5)
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .clear
+        collectionView.register(PersoneCell.self, forCellWithReuseIdentifier: "PersoneCell")
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        return collectionView
+    }()
     
-    private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
-    
-    private lazy var bottomView: UIView = {
+    lazy var bottomView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
         return view
     }()
     
-    private lazy var personLabel:UILabel = {
+    lazy var personLabel:UILabel = {
         let view = UILabel()
         view.numberOfLines = 0
         view.text = "Выберите человека, которого вирус поразит первым"
@@ -42,32 +55,19 @@ class SimulationViewController: UIViewController, UIGestureRecognizerDelegate {
         cellsModel = CellsModel(simulationViewController: self)
         
         let backButton = UIBarButtonItem(title: "Назад", style: .done, target: self, action: #selector(goBack))
-        backButton.tintColor = .white
         navigationItem.leftBarButtonItem = backButton
         
-        setupCollectionView()
+        if let navigationController = navigationController {
+            navigationController.navigationBar.isTranslucent = false
+            navigationController.navigationBar.barTintColor = .black
+            navigationController.navigationBar.tintColor = .white
+        }
+        
         setupConstraints()
         
         let swipeGesture = UIPanGestureRecognizer(target: self, action: #selector(handleSwipeGesture(_:)))
         swipeGesture.delegate = self
         collectionView.addGestureRecognizer(swipeGesture)
-        
-    }
-    
-    
-    func setupCollectionView() {
-        collectionView.backgroundColor = .clear
-        collectionView.register(PersoneCell.self, forCellWithReuseIdentifier: "PersoneCell")
-        collectionView.dataSource = self
-        collectionView.delegate = self
-        
-        let layout = UICollectionViewFlowLayout()
-        let width = UIScreen.main.bounds.width / 20
-        layout.minimumInteritemSpacing = 0
-        layout.minimumLineSpacing = 0
-        layout.itemSize = CGSize(width: width, height: width * 1.5)
-        
-        collectionView.collectionViewLayout = layout
         
     }
     
@@ -95,15 +95,18 @@ class SimulationViewController: UIViewController, UIGestureRecognizerDelegate {
             personLabel.centerYAnchor.constraint(equalTo: bottomView.centerYAnchor),
             personLabel.leadingAnchor.constraint(equalTo: bottomView.leadingAnchor, constant: 16),
             personLabel.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -16)
-            
         ])
     }
     
-    func stopTimer() {
+    private func stopTimer() {
         timer?.invalidate()
     }
     
-    func startTimer() {
+    private func startTimer() {
+        guard !isTimerRunning else {
+            return
+        }
+        
         personLabel.textColor = .systemRed
         if !isTimerRunning {
             isTimerRunning = true
@@ -129,25 +132,13 @@ class SimulationViewController: UIViewController, UIGestureRecognizerDelegate {
         present(alert, animated: true, completion: nil)
     }
     
-    func startSelection(at indexPath: IndexPath) {
-        
+    private func handleSelection(at indexPath: IndexPath) {
         selectedIndexPaths.insert(indexPath)
         cellsModel.cells[indexPath.item].isInfected = true
         collectionView.reloadItems(at: [indexPath])
         cellsModel.updateCellsModel(cellsModel)
         personLabel.textColor = .systemRed
         personLabel.text = "Заражено \(cellsModel.numberOfInfected) из \(cellsModel.groupSize)"
-        
-    }
-    func endSelection(at indexPath: IndexPath) {
-        
-        selectedIndexPaths.insert(indexPath)
-        cellsModel.cells[indexPath.item].isInfected = true
-        collectionView.reloadItems(at: [indexPath])
-        cellsModel.updateCellsModel(cellsModel)
-        personLabel.text = "Заражено \(cellsModel.numberOfInfected) из \(cellsModel.groupSize)"
-        startTimer()
-        
     }
     
     @objc private func goBack() {
@@ -165,19 +156,17 @@ class SimulationViewController: UIViewController, UIGestureRecognizerDelegate {
         let location = gestureRecognizer.location(in: collectionView)
         
         switch gestureRecognizer.state {
-        case .began:
+        case .began, .changed:
             if let indexPath = collectionView.indexPathForItem(at: location) {
-                startSelection(at: indexPath)
+                handleSelection(at: indexPath)
             }
             
-        case .changed:
-            if let indexPath = collectionView.indexPathForItem(at: location) {
-                startSelection(at: indexPath)
-            }
         case .ended:
             if let indexPath = collectionView.indexPathForItem(at: location) {
-                endSelection(at: indexPath)
+                handleSelection(at: indexPath)
+                startTimer()
             }
+            
         default:
             break
         }
